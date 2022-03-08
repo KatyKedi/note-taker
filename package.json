@@ -1,0 +1,23 @@
+{
+  "name": "note-taker",
+  "version": "1.0.0",
+  "description": "This application allows users to take notes and save them on a server.",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KatyKedi/note-taker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KatyKedi/note-taker/issues"
+  },
+  "homepage": "https://github.com/KatyKedi/note-taker#readme",
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
