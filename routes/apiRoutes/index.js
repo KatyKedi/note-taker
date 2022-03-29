@@ -2,7 +2,6 @@ const router = require('express').Router();
 const db = require('../../Develop/db/db');
 const fs = require('fs');
 const path = require('path');
-const { resourceLimits } = require('worker_threads');
 
 function filterByQuery(query, notesArray) {
     let filteredResults = notesArray;
@@ -31,12 +30,11 @@ function createNewNote(body, notesArray) {
 };
 
 function deleteNote(result, notesArray) {
-    const newArray = notesArray.filter(note => note !== result);
+    notesArray = notesArray.filter(note => note !== result);
     fs.writeFileSync(
         path.join(__dirname, '../../Develop/db/db.json'),
-        JSON.stringify(newArray, null, 2)
+        JSON.stringify(notesArray, null, 2)
     );
-    return newArray;
 };
 
 router.get('/notes', (req, res) => {
@@ -66,8 +64,8 @@ router.post('/notes', (req, res) => {
 
 router.delete('/notes/:id', (req, res) => {
     const result = findById(req.params.id, db);
-    const newArray = deleteNote(result, db);
-    res.json(newArray);
+    deleteNote(result, db);
+    res.json(result);
 });
 
 module.exports = router;
