@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true}))
 app.use(express.json());
 
 // make certain files readily available and not gate it behind a server endpoint
-app.use(express.static('Develop/public'));
+app.use(express.static('public'));
 
 app.use('/api', apiRoutes);
 app.use('/', htmlRoutes);

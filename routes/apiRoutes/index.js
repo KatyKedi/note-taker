@@ -1,71 +1,63 @@
 const router = require('express').Router();
-const db = require('../../Develop/db/db');
 const fs = require('fs');
 const path = require('path');
+const util = require('util');
 
-function filterByQuery(query, notesArray) {
-    let filteredResults = notesArray;
-    if (query.title) {
-      filteredResults = filteredResults.filter(note => note.title === query.title);
-    }
-    if (query.text) {
-      filteredResults = filteredResults.filter(note => note.text === query.text);
-    }
-    return filteredResults;
-};
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
 
-function findById(id, notesArray) {
-    const result = notesArray.filter(note => note.id === id)[0];
-    return result;
-};
+// Read the database file
+async function read() {
+    return await readFileAsync(path.join(__dirname, '../../db/db.json'), 'utf8');
+}
 
-function createNewNote(body, notesArray) {
-    const note = body;
-    notesArray.push(note);
-    fs.writeFileSync(
-        path.join(__dirname, '../../Develop/db/db.json'),
+// Rewrite the datbase file
+async function write(notesArray) {
+    return await writeFileAsync(
+        path.join(__dirname, '../../db/db.json'),
         JSON.stringify(notesArray, null, 2)
     );
+}
+
+// Find a note by it's id value
+function findById(id, notesArray) {
+    return notesArray.filter(note => note.id === id)[0];
+};
+
+async function createNewNote(note, notesArray) {
+    notesArray.push(note);
+    await write(notesArray)
     return note;
 };
 
-function deleteNote(result, notesArray) {
-    notesArray = notesArray.filter(note => note !== result);
-    fs.writeFileSync(
-        path.join(__dirname, '../../Develop/db/db.json'),
-        JSON.stringify(notesArray, null, 2)
-    );
+async function deleteNote(result, notesArray) {
+    notesArray = notesArray.filter(note => note.id !== result.id);
+    await write(notesArray)
+    return notesArray
 };
 
-router.get('/notes', (req, res) => {
-    let results = db;
-    if (req.query) {
-        results = filterByQuery(req.query, results);
-    }
+router.get('/notes', async (req, res) => {
+    let results = await read()
+    results = JSON.parse(results)
     res.json(results);
 });
 
-router.get('/notes/:id', (req, res) => {
-    const result = findById(req.params.id, db);
-    if (result) {
-        res.json(result);
-    } else {
-        res.send(404);
-    }
-});
-
-router.post('/notes', (req, res) => {
+router.post('/notes', async (req, res) => {
+    let results = await read()
+    results = JSON.parse(results)
     // set Id based on what the next index of the array will be
-    req.body.id = db.length.toString();
+    req.body.id = results.length.toString();
     // add note to json file and notes array in this function
-    const note = createNewNote(req.body, db);
+    const note = createNewNote(req.body, results);
     res.json(note);
 });
 
-router.delete('/notes/:id', (req, res) => {
-    const result = findById(req.params.id, db);
-    deleteNote(result, db);
-    res.json(result);
+router.delete('/notes/:id', async (req, res) => {
+    let results = await read()
+    results = JSON.parse(results)
+    const result = await findById(req.params.id, results);
+    const notesArray = await deleteNote(result, results);
+    res.json(notesArray)
 });
 
 module.exports = router;
